@@ -61,7 +61,6 @@ hl.config({
         middle_click_paste = false,
         mouse_move_enables_dpms = true,
         mouse_move_focuses_monitor = false,
-        initial_workspace_tracking = 0,
     },
     xwayland = {
         force_zero_scaling = true,
