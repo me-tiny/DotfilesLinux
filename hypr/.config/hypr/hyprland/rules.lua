@@ -80,7 +80,7 @@ hl.window_rule({
 hl.window_rule({
     name = "runelite-main-float",
     match = {
-        class = "^(net-runelite-client-RuneLite)$",
+        class = "^(net-runelite-launcher-Launcher)$",
         title = "^(RuneLite)$",
     },
     float = true,
@@ -90,7 +90,7 @@ hl.window_rule({
 hl.window_rule({
     name = "runelite-no-float-focus",
     match = {
-        class = "^(net-runelite-client-RuneLite)$",
+        class = "^(net-runelite-launcher-Launcher)$",
         title = "^(win(.*))$",
     },
     no_initial_focus = true,
@@ -152,7 +152,7 @@ hl.window_rule({
     name = "zoom-screenshare-chrome",
     match = {
         class = "^(zoom)$",
-        title = "^(as_toolbar|zoom_linux_float_video_window)$",
+        title = "^([a-z_]+_toolbar|zoom_linux_float_video_window)$",
     },
     pin = true,
     no_focus = true,
