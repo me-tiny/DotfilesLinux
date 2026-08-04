@@ -6,13 +6,19 @@ REPO_URL="git@github.com:neovim/neovim"
 INSTALL_PREFIX="/usr/local"
 BUILD_TYPE="Release"
 EXTRA_FLAGS="-DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}"
+LOG_FILE=~/.local/state/nvim-updates.log
 
 cleanup() {
     if [[ -n "${TMP_DIR:-}" && -d "${TMP_DIR}" ]]; then
         echo "Cleaning up temporary directory: ${TMP_DIR}"
         rm -rf "${TMP_DIR}"
         echo "done, nvim built from source into ${INSTALL_PREFIX}."
+        log "INFO" "new version $(nvim --version | head -1)"
     fi
+}
+
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" >> $LOG_FILE
 }
 
 SUDO_CMD=""
@@ -27,6 +33,7 @@ if [[ $EUID -ne 0 ]]; then
     fi
 fi
 
+log "INFO" "current version $(nvim --version | head -1)"
 
 TMP_DIR=$(mktemp -d -t nvim_install_XXXXXX)
 trap cleanup EXIT INT TERM
