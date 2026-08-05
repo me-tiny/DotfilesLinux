@@ -6,6 +6,7 @@ import Quickshell.Services.SystemTray
 
 import qs.config
 import qs.components
+import qs.services as Services
 
 Rectangle {
     id: popout
@@ -30,8 +31,7 @@ Rectangle {
     readonly property bool engaged: open || height > 0
     visible: engaged
 
-    readonly property int drawerWidth: Math.max(1, Math.min(340, drawerRow.implicitWidth + 16))
-    readonly property int menuWidth: Math.max(260, Math.min(420, menuCol.implicitWidth + 16))
+    readonly property int drawerWidth: Math.max(420, Math.min(460, drawerRow.implicitWidth + 16))
 
     readonly property int contentHeight: Math.min(
         Theme.popoutSpace,
@@ -42,7 +42,7 @@ Rectangle {
 
     onOpenChanged: if (open) keys.forceActiveFocus()
 
-    width: view === "menu" ? menuWidth : drawerWidth
+    width: drawerWidth
     height: open ? contentHeight : 0
 
     Behavior on height { NumberAnimation { duration: Theme.popupAnimMs; easing.type: Easing.OutCubic } }
@@ -56,6 +56,20 @@ Rectangle {
 
     HoverHandler {
         onHoveredChanged: popout.tray.popupHovered = hovered
+    }
+
+    Item {
+        id: hoverBridge
+        parent: popout.parent
+        visible: popout.open
+        anchors.top: parent.top
+        anchors.right: parent.right
+        width: popout.width
+        height: Theme.barHeight
+
+        HoverHandler {
+            onHoveredChanged: popout.tray.bridgeHovered = hovered
+        }
     }
 
     FocusScope {
@@ -92,6 +106,7 @@ Rectangle {
         RowLayout {
             id: drawerRow
             spacing: 4
+            visible: SystemTray.items.values.length > 0
 
             Repeater {
                 model: SystemTray.items
@@ -99,15 +114,15 @@ Rectangle {
                     id: iconCell
                     required property var modelData
 
-                    Layout.preferredWidth: 24
-                    Layout.preferredHeight: 24
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
                     radius: Theme.rounding
                     color: iconHover.containsMouse ? Theme.hover : "transparent"
 
                     IconImage {
                         anchors.centerIn: parent
-                        width: 16
-                        height: 16
+                        width: 22
+                        height: 22
                         source: iconCell.modelData.icon
                     }
 
@@ -126,6 +141,99 @@ Rectangle {
                         }
                     }
                 }
+            }
+        }
+
+        Rectangle {
+            visible: drawerRow.visible
+            width: parent.width - 16
+            height: 1
+            color: Theme.overlay
+            opacity: 0.4
+        }
+
+        RowLayout {
+            width: parent.width - 16
+            spacing: 6
+
+            BarText {
+                text: "Notifications"
+                color: Theme.mauve
+                weight: Font.Bold
+                font.pixelSize: Theme.fontSizeSmall
+            }
+
+            Item { Layout.fillWidth: true }
+
+            Rectangle {
+                implicitWidth: 26
+                implicitHeight: 26
+                radius: Theme.rounding
+                color: dndHover.containsMouse ? Theme.hover : "transparent"
+
+                BarText {
+                    anchors.centerIn: parent
+                    text: Services.Notifications.dnd ? "󰂛" : "󰂚"
+                    color: Services.Notifications.dnd ? Theme.teal : Theme.text
+                    font.pixelSize: Theme.fontSizeSmall
+                }
+
+                MouseArea {
+                    id: dndHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: Services.Notifications.dnd = !Services.Notifications.dnd
+                }
+            }
+
+            Rectangle {
+                visible: Services.Notifications.list.length > 0
+                implicitWidth: clearText.implicitWidth + 16
+                implicitHeight: 26
+                radius: Theme.rounding
+                color: clearHover.containsMouse ? Theme.hover : "transparent"
+                border.width: 1
+                border.color: Theme.overlay
+
+                BarText {
+                    id: clearText
+                    anchors.centerIn: parent
+                    text: "Clear"
+                    font.pixelSize: Theme.fontSizeSmall
+                }
+
+                MouseArea {
+                    id: clearHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: Services.Notifications.clearAll()
+                }
+            }
+        }
+
+        BarText {
+            visible: Services.Notifications.list.length === 0
+            width: parent.width - 16
+            text: "No notifications"
+            color: Theme.overlay
+            font.pixelSize: Theme.fontSizeSmall
+            horizontalAlignment: Text.AlignHCenter
+            topPadding: 8
+            bottomPadding: 8
+        }
+
+        ListView {
+            visible: Services.Notifications.list.length > 0
+            width: parent.width - 16
+            implicitHeight: Math.min(contentHeight, Theme.popoutSpace - 140)
+            clip: true
+            spacing: 6
+            model: Services.Notifications.list
+            delegate: NotificationCard {
+                required property var modelData
+                width: ListView.view.width
+                notif: modelData
+                onActed: popout.tray.closeAll()
             }
         }
     }

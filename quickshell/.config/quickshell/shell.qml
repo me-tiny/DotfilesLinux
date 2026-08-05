@@ -7,4 +7,6 @@ ShellRoot {
         model: Quickshell.screens
         Bar.Bar { }
     }
+
+    Bar.NotificationPopups { }
 }

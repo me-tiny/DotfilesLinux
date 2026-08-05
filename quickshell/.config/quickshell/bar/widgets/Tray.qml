@@ -3,6 +3,7 @@ import Quickshell.Hyprland
 
 import qs.config
 import qs.components
+import qs.services as Services
 
 Item {
     id: root
@@ -14,8 +15,11 @@ Item {
     readonly property bool overlayOpen: mode !== "closed"
 
     property bool popupHovered: false
+    property bool bridgeHovered: false
     readonly property bool pointerInside:
-        buttonHover.containsMouse || popupHovered
+        buttonHover.containsMouse || popupHovered || bridgeHovered
+
+    onModeChanged: Services.Notifications.centerOpen = (mode === "drawer")
 
     function showDrawer() {
         _beginOverlay()
@@ -93,6 +97,19 @@ Item {
             anchors.centerIn: parent
             text: "\ud804\udc54"
             font.pixelSize: Theme.fontSizeIcon
+        }
+
+        Rectangle {
+            visible: Services.Notifications.dnd || Services.Notifications.list.length > 0
+            width: 7
+            height: 7
+            radius: width / 2
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 2
+            color: Services.Notifications.dnd ? Theme.teal
+                 : Services.Notifications.hasCritical ? Theme.red
+                 : Theme.text
         }
 
         MouseArea {

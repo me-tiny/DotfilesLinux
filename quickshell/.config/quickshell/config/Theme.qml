@@ -5,7 +5,10 @@ import QtQuick
 
 Singleton {
     readonly property color base:    "#1e1e2e"
+    readonly property color surface0: "#313244"
+    readonly property color surface1: "#45475a"
     readonly property color text:    "#cdd6f4"
+    readonly property color subtext: "#a6adc8"
     readonly property color overlay: "#6c7086"
     readonly property color teal:    "#94e2d5"
     readonly property color mauve:   "#cba6f7"
