@@ -116,10 +116,10 @@ hl.window_rule({
 })
 
 hl.window_rule({
-    name = "zoom-tile-primary",
+    name = "zoom-tile-meeting",
     match = {
         class = "^(zoom)$",
-        title = "^(Zoom Workplace|Zoom Meeting|Meeting|Zoom Cloud Meetings)$",
+        title = "^(Zoom Meeting|Meeting)$",
     },
     tile = true,
     idle_inhibit = "always",
