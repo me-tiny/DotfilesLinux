@@ -12,6 +12,7 @@ Singleton {
 
     property var list: []
     property var popups: []
+    property var exiting: []
 
     readonly property bool hasCritical: list.some(n => n.urgency === NotificationUrgency.Critical)
 
@@ -22,6 +23,7 @@ Singleton {
         if (centerOpen) {
             now = new Date()
             popups = []
+            exiting = []
         }
     }
 
@@ -34,9 +36,18 @@ Singleton {
     }
 
     function hidePopup(n) {
-        popups = popups.filter(p => p !== n)
-        if (n.transient)
+        if (!popups.includes(n) || exiting.includes(n))
+            return
+        if (n.transient) {
             n.dismiss()
+            return
+        }
+        exiting = [...exiting, n]
+    }
+
+    function finalizeHide(n) {
+        popups = popups.filter(p => p !== n)
+        exiting = exiting.filter(p => p !== n)
     }
 
     function clearAll() {
@@ -71,8 +82,9 @@ Singleton {
     }
 
     function _drop(n) {
-        popups = popups.filter(p => p !== n)
         list = list.filter(p => p !== n)
+        if (popups.includes(n) && !exiting.includes(n))
+            exiting = [...exiting, n]
         delete _times[n.id]
     }
 

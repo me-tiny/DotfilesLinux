@@ -107,9 +107,9 @@ Item {
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.margins: 2
-            color: Services.Notifications.dnd ? Theme.teal
-                 : Services.Notifications.hasCritical ? Theme.red
-                 : Theme.text
+            color: Services.Notifications.dnd ? Theme.yellow
+                 : Services.Notifications.hasCritical ? Theme.teal
+                 : Theme.red
         }
 
         MouseArea {

@@ -15,6 +15,8 @@ Rectangle {
 
     signal acted()
 
+    readonly property bool exiting: popup && Services.Notifications.exiting.includes(notif)
+
     readonly property bool critical: notif && notif.urgency === NotificationUrgency.Critical
     readonly property var defaultAction: {
         if (!notif) return null
@@ -27,6 +29,18 @@ Rectangle {
         notif && notif.hints && notif.hints.value !== undefined ? Number(notif.hints.value) : -1
 
     implicitHeight: content.implicitHeight + 20
+    x: exiting ? width + 48 : 0
+    opacity: exiting ? 0 : 1
+
+    Behavior on x {
+        enabled: card.popup
+        NumberAnimation { duration: 220; easing.type: Easing.InQuad }
+    }
+    Behavior on opacity {
+        enabled: card.popup
+        NumberAnimation { duration: 200 }
+    }
+
     radius: Theme.popupRounding
     color: popup ? Theme.base : Theme.surface0
     border.width: 1
@@ -34,10 +48,22 @@ Rectangle {
 
     HoverHandler { id: hover }
 
+    // keep the notification's data alive while the card animates out
+    RetainableLock {
+        object: card.notif
+        locked: true
+    }
+
     Timer {
         interval: card.notif ? Services.Notifications.timeoutFor(card.notif) : 0
         running: card.popup && interval > 0 && !hover.hovered
         onTriggered: Services.Notifications.hidePopup(card.notif)
+    }
+
+    Timer {
+        running: card.exiting
+        interval: 240
+        onTriggered: Services.Notifications.finalizeHide(card.notif)
     }
 
     MouseArea {

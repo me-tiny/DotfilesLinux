@@ -28,7 +28,7 @@ Rectangle {
     property string view: "drawer"
 
     readonly property bool open: tray.mode !== "closed"
-    readonly property bool engaged: open || height > 0
+    readonly property bool engaged: open || opacity > 0
     visible: engaged
 
     readonly property int drawerWidth: Math.max(420, Math.min(460, drawerRow.implicitWidth + 16))
@@ -43,10 +43,36 @@ Rectangle {
     onOpenChanged: if (open) keys.forceActiveFocus()
 
     width: drawerWidth
-    height: open ? contentHeight : 0
+    // full-size while engaged; zero when closed so the bar's input mask
+    // region collapses with it
+    height: engaged ? contentHeight : 0
 
-    Behavior on height { NumberAnimation { duration: Theme.popupAnimMs; easing.type: Easing.OutCubic } }
-    Behavior on width  { NumberAnimation { duration: Theme.popupAnimMs; easing.type: Easing.OutCubic } }
+    // macOS popover: appear full-size, scale from the bar edge with a fade
+    scale: open ? 1 : 0.96
+    opacity: open ? 1 : 0
+    transformOrigin: Item.TopRight
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: popout.open ? 240 : 140
+            easing.type: popout.open ? Easing.OutBack : Easing.InQuad
+        }
+    }
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: popout.open ? 170 : 130
+            easing.type: popout.open ? Easing.OutQuad : Easing.InQuad
+        }
+    }
+
+    // only animate content-size changes while open; open/close snaps so the
+    // popover never height-reveals
+    Behavior on height {
+        enabled: popout.open && popout.height > 0
+        NumberAnimation { duration: 240; easing.type: Easing.OutQuint }
+    }
+    Behavior on width { NumberAnimation { duration: 240; easing.type: Easing.OutQuint } }
 
     color: Theme.base
     radius: Theme.popupRounding
@@ -98,7 +124,14 @@ Rectangle {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        visible: popout.view === "drawer"
+        visible: opacity > 0
+        enabled: popout.view === "drawer"
+        opacity: popout.view === "drawer" ? 1 : 0
+        transform: Translate {
+            x: popout.view === "drawer" ? 0 : -16
+            Behavior on x { NumberAnimation { duration: 260; easing.type: Easing.OutQuint } }
+        }
+        Behavior on opacity { NumberAnimation { duration: 150 } }
         padding: 8
         topPadding: 8 + popout.tuck
         spacing: 6
@@ -223,17 +256,52 @@ Rectangle {
         }
 
         ListView {
+            id: centerList
             visible: Services.Notifications.list.length > 0
             width: parent.width - 16
             implicitHeight: Math.min(contentHeight, Theme.popoutSpace - 140)
             clip: true
             spacing: 6
-            model: Services.Notifications.list
+
+            model: ScriptModel {
+                values: Services.Notifications.list
+            }
+
             delegate: NotificationCard {
                 required property var modelData
                 width: ListView.view.width
                 notif: modelData
                 onActed: popout.tray.closeAll()
+            }
+
+            add: Transition {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200 }
+                NumberAnimation {
+                    property: "scale"
+                    from: 0.97
+                    to: 1
+                    duration: 240
+                    easing.type: Easing.OutBack
+                }
+            }
+
+            remove: Transition {
+                NumberAnimation { property: "opacity"; to: 0; duration: 150 }
+                NumberAnimation {
+                    property: "x"
+                    to: 40
+                    duration: 180
+                    easing.type: Easing.InQuad
+                }
+            }
+
+            displaced: Transition {
+                NumberAnimation {
+                    properties: "x,y"
+                    duration: 240
+                    easing.type: Easing.OutQuint
+                }
+                NumberAnimation { property: "opacity"; to: 1; duration: 120 }
             }
         }
     }
@@ -245,7 +313,14 @@ Rectangle {
         anchors.right: parent.right
         anchors.margins: 8
         anchors.topMargin: 8 + popout.tuck
-        visible: popout.view === "menu"
+        visible: opacity > 0
+        enabled: popout.view === "menu"
+        opacity: popout.view === "menu" ? 1 : 0
+        transform: Translate {
+            x: popout.view === "menu" ? 0 : 24
+            Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+        }
+        Behavior on opacity { NumberAnimation { duration: 150 } }
         spacing: 2
 
         Rectangle {
