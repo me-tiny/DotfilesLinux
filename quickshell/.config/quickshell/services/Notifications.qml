@@ -17,6 +17,7 @@ Singleton {
     readonly property bool hasCritical: list.some(n => n.urgency === NotificationUrgency.Critical)
 
     property var _times: ({})
+    property var _exitAt: ({})
     property date now: new Date()
 
     onCenterOpenChanged: {
@@ -42,12 +43,33 @@ Singleton {
             n.dismiss()
             return
         }
+        _stageExit(n)
+    }
+
+    function _stageExit(n) {
+        _exitAt[n.id] = Date.now()
         exiting = [...exiting, n]
     }
 
     function finalizeHide(n) {
+        if (_alive(n))
+            delete _exitAt[n.id]
         popups = popups.filter(p => p !== n)
         exiting = exiting.filter(p => p !== n)
+    }
+
+    function _alive(n) {
+        try {
+            return n !== null && n !== undefined && n.id !== undefined
+        } catch (e) {
+            return false
+        }
+    }
+
+    function prune() {
+        list = list.filter(p => _alive(p))
+        popups = popups.filter(p => _alive(p))
+        exiting = exiting.filter(p => _alive(p))
     }
 
     function clearAll() {
@@ -84,7 +106,7 @@ Singleton {
     function _drop(n) {
         list = list.filter(p => p !== n)
         if (popups.includes(n) && !exiting.includes(n))
-            exiting = [...exiting, n]
+            _stageExit(n)
         delete _times[n.id]
     }
 
@@ -105,6 +127,28 @@ Singleton {
         running: root.centerOpen
         repeat: true
         onTriggered: root.now = new Date()
+    }
+
+    readonly property var _locks: Variants {
+        model: root.popups
+        delegate: RetainableLock {
+            required property var modelData
+            object: modelData
+            locked: true
+        }
+    }
+
+    readonly property var _sweep: Timer {
+        interval: 1000
+        repeat: true
+        running: root.exiting.length > 0
+        onTriggered: {
+            const cutoff = Date.now() - 1000
+            for (const n of [...root.exiting]) {
+                if (!root._alive(n) || (root._exitAt[n.id] ?? 0) < cutoff)
+                    root.finalizeHide(n)
+            }
+        }
     }
 
     Component.onCompleted: {

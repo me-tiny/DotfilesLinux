@@ -15,6 +15,8 @@ Rectangle {
 
     signal acted()
 
+    Component.onCompleted: if (!notif) Services.Notifications.prune()
+
     readonly property bool exiting: popup && Services.Notifications.exiting.includes(notif)
 
     readonly property bool critical: notif && notif.urgency === NotificationUrgency.Critical
@@ -167,7 +169,8 @@ Rectangle {
                         id: closeHover
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: card.notif.dismiss()
+                        onClicked: card.notif ? card.notif.dismiss()
+                                              : Services.Notifications.prune()
                     }
                 }
             }
