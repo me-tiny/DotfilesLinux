@@ -18,6 +18,8 @@ Singleton {
 
     property var _times: ({})
     property var _exitAt: ({})
+    property var _shownAt: ({})
+    property var _held: ({})
     property date now: new Date()
 
     onCenterOpenChanged: {
@@ -52,10 +54,18 @@ Singleton {
     }
 
     function finalizeHide(n) {
-        if (_alive(n))
+        if (_alive(n)) {
             delete _exitAt[n.id]
+            delete _shownAt[n.id]
+            delete _held[n.id]
+        }
         popups = popups.filter(p => p !== n)
         exiting = exiting.filter(p => p !== n)
+    }
+
+    function hold(n, held) {
+        if (_alive(n))
+            _held[n.id] = held
     }
 
     function _alive(n) {
@@ -94,12 +104,13 @@ Singleton {
         _times[n.id] = Date.now()
         n.closed.connect(() => root._drop(n))
 
-        if (!n.transient)
+        if (!n.transient && !list.includes(n))
             list = [n, ...list]
 
-        if (fresh && !dnd && !centerOpen)
+        if (fresh && !dnd && !centerOpen && !popups.includes(n)) {
+            _shownAt[n.id] = Date.now()
             popups = [n, ...popups]
-        else if (fresh && n.transient)
+        } else if (fresh && n.transient)
             Qt.callLater(() => n.dismiss())
     }
 
@@ -135,6 +146,32 @@ Singleton {
             required property var modelData
             object: modelData
             locked: true
+        }
+    }
+
+    readonly property var _expire: Timer {
+        interval: 500
+        repeat: true
+        running: root.popups.length > root.exiting.length
+        onTriggered: {
+            const t = Date.now()
+            for (const n of [...root.popups]) {
+                if (!root._alive(n)) {
+                    root.finalizeHide(n)
+                    continue
+                }
+                if (root.exiting.includes(n))
+                    continue
+                const timeout = root.timeoutFor(n)
+                if (timeout <= 0)
+                    continue
+                if (root._held[n.id]) {
+                    root._shownAt[n.id] = t
+                    continue
+                }
+                if (t - (root._shownAt[n.id] ?? t) > timeout)
+                    root.hidePopup(n)
+            }
         }
     }
 

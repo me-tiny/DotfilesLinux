@@ -48,18 +48,19 @@ Rectangle {
     border.width: 1
     border.color: critical ? Theme.red : Theme.overlay
 
-    HoverHandler { id: hover }
+    HoverHandler {
+        id: hover
+        onHoveredChanged: {
+            if (card.popup)
+                Services.Notifications.hold(card.notif, hovered)
+        }
+    }
 
-    // keep the notification's data alive while the card animates out
+    readonly property bool dbgHovered: hover.hovered
+
     RetainableLock {
         object: card.notif
         locked: true
-    }
-
-    Timer {
-        interval: card.notif ? Services.Notifications.timeoutFor(card.notif) : 0
-        running: card.popup && interval > 0 && !hover.hovered
-        onTriggered: Services.Notifications.hidePopup(card.notif)
     }
 
     Timer {
