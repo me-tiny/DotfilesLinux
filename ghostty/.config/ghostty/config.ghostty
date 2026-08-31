@@ -1,5 +1,7 @@
 theme = Catppuccin Mocha
 
+custom-shader = shaders/cursor.glsl
+
 font-family = "MonoLisaCode"
 font-family = "Symbols Nerd Font Mono"
 font-size = 15.5
@@ -73,7 +75,7 @@ confirm-close-surface = false
 background-opacity = 1
 
 scrollback-limit = 10000000
-custom-shader-animation = false
+custom-shader-animation = true
 shell-integration-features = no-cursor,no-sudo,title,ssh-env
 bell-features = no-system,no-title,no-attention
 
