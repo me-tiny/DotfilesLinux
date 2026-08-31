@@ -16,7 +16,7 @@ visiblePlugin=rnnoise#0
 mostUsedPresets=HD800S
 outputDevice=alsa_output.pci-0000_74_00.6.iec958-stereo
 plugins=equalizer#0
-usedPresets=HD800S:33
+usedPresets=HD800S:36
 visiblePage=pluginsPage
 visiblePlugin=equalizer#0
 
