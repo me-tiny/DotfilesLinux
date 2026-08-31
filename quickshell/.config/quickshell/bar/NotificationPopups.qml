@@ -11,6 +11,7 @@ PanelWindow {
     id: win
 
     screen: Hyprland.focusedMonitor?.screen ?? Quickshell.screens[0]
+    visible: lv.count > 0
     anchors { top: true; right: true }
     margins { top: 8 }
     exclusiveZone: 0

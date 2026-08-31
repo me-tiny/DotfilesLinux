@@ -1,7 +1,9 @@
 pragma Singleton
 
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Notifications
+import Quickshell.Wayland
 import QtQuick
 
 Singleton {
@@ -88,6 +90,17 @@ Singleton {
             n.dismiss()
     }
 
+    function focusSender(n) {
+        if (!_alive(n)) return
+        const app = (n.appName || "").toLowerCase()
+        if (!app) return
+        const match = [...ToplevelManager.toplevels.values].find(t => {
+            const id = (t.appId || "").toLowerCase()
+            return id && (id.includes(app) || app.includes(id))
+        })
+        if (match) match.activate()
+    }
+
     function ago(id) {
         const t = _times[id]
         if (!t)
@@ -119,6 +132,38 @@ Singleton {
         if (popups.includes(n) && !exiting.includes(n))
             _stageExit(n)
         delete _times[n.id]
+    }
+
+    readonly property var _ipc: IpcHandler {
+        target: "notifs"
+
+        function dnd(): string {
+            return root.dnd ? "on" : "off"
+        }
+
+        function toggleDnd(): string {
+            root.dnd = !root.dnd
+            return dnd()
+        }
+
+        // hide the newest popup (keeps it in the drawer list)
+        function dismiss(): string {
+            const visible = root.popups.filter(n => !root.exiting.includes(n))
+            if (visible.length === 0) return "none"
+            root.hidePopup(visible[0])
+            return "ok"
+        }
+
+        function dismissAll(): string {
+            for (const n of [...root.popups])
+                root.hidePopup(n)
+            return "ok"
+        }
+
+        function clearAll(): string {
+            root.clearAll()
+            return "ok"
+        }
     }
 
     readonly property var server: NotificationServer {

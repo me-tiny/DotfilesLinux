@@ -10,6 +10,7 @@ Text {
     property int grade: Theme.fontGrade
     property var extraFeatures: ({})
 
+    textFormat: Text.PlainText
     color: Theme.text
     font.family: Theme.fontFamily
     font.pixelSize: Theme.fontSize

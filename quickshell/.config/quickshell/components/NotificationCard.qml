@@ -30,6 +30,28 @@ Rectangle {
     readonly property real progressValue:
         notif && notif.hints && notif.hints.value !== undefined ? Number(notif.hints.value) : -1
 
+    function stripImageTags(text) {
+        let out = ""
+        let i = 0
+        while (i < text.length) {
+            const open = text.indexOf("<", i)
+            if (open === -1) { out += text.slice(i); break }
+            out += text.slice(i, open)
+            const close = text.indexOf(">", open)
+            const tag = close === -1 ? text.slice(open) : text.slice(open, close + 1)
+            const name = /^<[^A-Za-z0-9]*([A-Za-z0-9]+)/.exec(tag)
+            if (!name || name[1].toLowerCase() !== "img") out += tag
+            i = close === -1 ? text.length : close + 1
+        }
+        return out
+    }
+
+    // strip, rewrite newlines, strip again: the <br/> rewrite can split a
+    // kept tag and expose an <img> the first pass couldn't see
+    function styledBody(body) {
+        return stripImageTags(stripImageTags(String(body || "")).replace(/\r\n|\r|\n/g, "<br/>"))
+    }
+
     implicitHeight: content.implicitHeight + 20
     x: exiting ? width + 48 : 0
     opacity: exiting ? 0 : 1
@@ -71,9 +93,18 @@ Rectangle {
 
     MouseArea {
         anchors.fill: parent
-        enabled: card.defaultAction !== null
-        onClicked: {
-            card.defaultAction.invoke()
+        enabled: card.notif !== null && card.notif !== undefined
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        cursorShape: Qt.PointingHandCursor
+        onClicked: (mouse) => {
+            if (mouse.button === Qt.RightButton) {
+                card.notif.dismiss()
+                return
+            }
+            if (card.defaultAction)
+                card.defaultAction.invoke()
+            else
+                Services.Notifications.focusSender(card.notif)
             card.notif.dismiss()
             card.acted()
         }
@@ -102,6 +133,8 @@ Rectangle {
                     visible: card.notif && card.notif.image !== ""
                     anchors.fill: parent
                     source: card.notif ? card.notif.image : ""
+                    sourceSize.width: width * Screen.devicePixelRatio
+                    sourceSize.height: height * Screen.devicePixelRatio
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                 }
@@ -170,6 +203,7 @@ Rectangle {
                         id: closeHover
                         anchors.fill: parent
                         hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: card.notif ? card.notif.dismiss()
                                               : Services.Notifications.prune()
                     }
@@ -179,7 +213,7 @@ Rectangle {
             BarText {
                 Layout.fillWidth: true
                 visible: text !== ""
-                text: card.notif ? card.notif.body : ""
+                text: card.notif ? card.styledBody(card.notif.body) : ""
                 color: Theme.subtext
                 font.pixelSize: Theme.fontSizeSmall
                 textFormat: Text.StyledText
@@ -239,6 +273,7 @@ Rectangle {
                             id: actionHover
                             anchors.fill: parent
                             hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 actionButton.modelData.invoke()
                                 card.notif.dismiss()
