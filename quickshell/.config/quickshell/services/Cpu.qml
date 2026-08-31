@@ -24,8 +24,9 @@ Singleton {
         const iowait = parseInt(p[5]) || 0
         const irq = parseInt(p[6]) || 0
         const softirq = parseInt(p[7]) || 0
+        const steal = parseInt(p[8]) || 0
 
-        const total = user + nice + system + idle + iowait + irq + softirq
+        const total = user + nice + system + idle + iowait + irq + softirq + steal
         const idleTime = idle + iowait
 
         if (root._lastTotal > 0) {
