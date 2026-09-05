@@ -78,6 +78,8 @@ scrollback-limit = 10000000
 custom-shader-animation = true
 shell-integration-features = no-cursor,no-sudo,title,ssh-env
 bell-features = no-system,no-title,no-attention
+async-backend = epoll
+resize-overlay = never
 
 clipboard-read = allow
 clipboard-write = allow
@@ -89,3 +91,5 @@ keybind = super+alt+i=inspector:toggle
 keybind = ctrl+equal=increase_font_size:0.25
 keybind = ctrl+-=decrease_font_size:0.25
 keybind = ctrl+0=reset_font_size
+keybind = shift+enter=csi:13;2u
+keybind = alt+shift+enter=csi:13;4u
