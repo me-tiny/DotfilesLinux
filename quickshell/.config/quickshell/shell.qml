@@ -1,6 +1,7 @@
 import Quickshell
 
 import qs.bar as Bar
+import qs.launcher as Launcher
 
 ShellRoot {
     Variants {
@@ -9,4 +10,5 @@ ShellRoot {
     }
 
     Bar.NotificationPopups { }
+    Launcher.Launcher { }
 }

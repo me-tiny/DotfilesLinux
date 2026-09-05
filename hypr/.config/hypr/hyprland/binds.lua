@@ -1,6 +1,8 @@
 local terminal = "ghostty"
 local file_manager = "thunar"
 local menu = "rofi -modi drun, run -show drun"
+local launcher = "qs ipc call launcher toggle"
+local notifs = "qs ipc call notifs"
 local calc =
     "rofi -show calc -no-show-match -no-sort -automatic-save-to-history -lines 0 -calc-command 'echo -n '{result}' | wl-copy'"
 local emoji = "rofi -show emoji -kb-accept-entry '' -kb-custom-1 Return"
@@ -18,7 +20,8 @@ hl.bind(main_mod .. " + E", hl.dsp.exec_cmd(file_manager))
 hl.bind(main_mod .. " + SHIFT + SPACE", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(main_mod .. " + F", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }))
 hl.bind(main_mod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
-hl.bind(main_mod .. " + D", hl.dsp.exec_cmd(menu))
+hl.bind(main_mod .. " + D", hl.dsp.exec_cmd(launcher))
+hl.bind(main_mod .. " + SHIFT + D", hl.dsp.exec_cmd(menu))
 hl.bind(main_mod .. " + SHIFT + E", hl.dsp.exec_cmd(emoji))
 hl.bind(main_mod .. " + C", hl.dsp.exec_cmd(calc))
 hl.bind(main_mod .. " + P", hl.dsp.window.pseudo({ action = "toggle" }))
@@ -29,6 +32,11 @@ hl.bind(main_mod .. " + V", hl.dsp.exec_cmd(clipboard))
 hl.bind("CTRL + SHIFT + 4", hl.dsp.exec_cmd(screenshot))
 hl.bind(main_mod .. " + SHIFT + I", hl.dsp.exec_cmd("togidle"))
 hl.bind(main_mod .. " + SHIFT + P", hl.dsp.exec_cmd("1password --quick-access"))
+hl.bind(main_mod .. " + comma", hl.dsp.exec_cmd(notifs .. " dismiss"))
+hl.bind(main_mod .. " + SHIFT + comma", hl.dsp.exec_cmd(notifs .. " dismissAll"))
+hl.bind(main_mod .. " + CTRL + comma", hl.dsp.exec_cmd(notifs .. " toggleDnd"))
+hl.bind(main_mod .. " + ALT + comma", hl.dsp.exec_cmd(notifs .. " invokeLast"))
+hl.bind(main_mod .. " + O", hl.dsp.exec_cmd("hyprpop"))
 
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd(music_player .. " play-pause"))
 hl.bind("XF86AudioNext", hl.dsp.exec_cmd(music_player .. " next"))
@@ -59,6 +67,9 @@ for i = 1, 10 do
     hl.bind(main_mod .. " + " .. key, hl.dsp.focus({ workspace = i }))
     hl.bind(main_mod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = i }))
 end
+
+hl.bind(main_mod .. " + TAB", hl.dsp.focus({ workspace = "m+1" }))
+hl.bind(main_mod .. " + SHIFT + TAB", hl.dsp.focus({ workspace = "m-1" }))
 
 hl.bind(main_mod .. " + S", hl.dsp.workspace.toggle_special("magic"))
 hl.bind(main_mod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))

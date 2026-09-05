@@ -32,12 +32,26 @@ Singleton {
         }
     }
 
+    readonly property int maxTimeout: 30000
+
     function timeoutFor(n) {
         if (n.urgency === NotificationUrgency.Critical)
             return n.transient ? 10000 : 0
-        if (n.expireTimeout > 0)
-            return n.expireTimeout
-        return n.urgency === NotificationUrgency.Low ? 5000 : 10000
+        const floor = n.urgency === NotificationUrgency.Low ? 5000 : 10000
+        const requested = n.expireTimeout > 0 ? n.expireTimeout : 0
+        return Math.min(maxTimeout, Math.max(floor, requested))
+    }
+
+    function bypassesDnd(n) {
+        return n.urgency === NotificationUrgency.Critical && (n.appName || "") === "notify-send"
+    }
+
+    function invokeDefault(n) {
+        if (!_alive(n)) return
+        const action = [...n.actions].find(a => a.identifier === "default")
+        if (action) action.invoke()
+        else focusSender(n)
+        n.dismiss()
     }
 
     function hidePopup(n) {
@@ -116,16 +130,61 @@ Singleton {
         n.tracked = true
         _times[n.id] = Date.now()
         n.closed.connect(() => root._drop(n))
+        _watchUpdates(n)
 
         if (!n.transient && !list.includes(n))
             list = [n, ...list]
 
-        if (fresh && !dnd && !centerOpen && !popups.includes(n)) {
+        if (fresh && (!dnd || bypassesDnd(n)) && !centerOpen && !popups.includes(n)) {
             _shownAt[n.id] = Date.now()
             popups = [n, ...popups]
         } else if (fresh && n.transient)
             Qt.callLater(() => n.dismiss())
     }
+
+    function _watchUpdates(n) {
+        const refresh = () => root._touch(n)
+        for (const sig of ["summaryChanged", "bodyChanged", "imageChanged"]) {
+            const s = n[sig]
+            if (s && typeof s.connect === "function")
+                s.connect(refresh)
+        }
+    }
+
+    function _touch(n) {
+        if (!_alive(n) || exiting.includes(n))
+            return
+        if (popups.includes(n)) {
+            _shownAt[n.id] = Date.now()
+            return
+        }
+        if ((dnd && !bypassesDnd(n)) || centerOpen || n.transient)
+            return
+        _shownAt[n.id] = Date.now()
+        popups = [n, ...popups]
+    }
+
+    property bool _hydrated: false
+
+    readonly property var _state: FileView {
+        path: Quickshell.stateDir + "/notifications.json"
+        atomicWrites: true
+        printErrors: false
+        onLoaded: root._hydrate(text())
+        onLoadFailed: root._hydrate("")
+    }
+
+    function _hydrate(raw) {
+        if (_hydrated) return
+        try {
+            const parsed = JSON.parse(raw)
+            if (parsed && typeof parsed.dnd === "boolean")
+                dnd = parsed.dnd
+        } catch (e) {}
+        _hydrated = true
+    }
+
+    onDndChanged: if (_hydrated) _state.setText(JSON.stringify({ dnd: dnd }) + "\n")
 
     function _drop(n) {
         list = list.filter(p => p !== n)
@@ -157,6 +216,13 @@ Singleton {
         function dismissAll(): string {
             for (const n of [...root.popups])
                 root.hidePopup(n)
+            return "ok"
+        }
+
+        function invokeLast(): string {
+            const visible = root.popups.filter(n => !root.exiting.includes(n))
+            if (visible.length === 0) return "none"
+            root.invokeDefault(visible[0])
             return "ok"
         }
 

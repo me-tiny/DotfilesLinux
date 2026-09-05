@@ -10,8 +10,8 @@ import qs.services as Services
 PanelWindow {
     id: win
 
-    screen: Hyprland.focusedMonitor?.screen ?? Quickshell.screens[0]
-    visible: lv.count > 0
+    screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
+    visible: Services.Notifications.popups.length > 0
     anchors { top: true; right: true }
     margins { top: 8 }
     exclusiveZone: 0

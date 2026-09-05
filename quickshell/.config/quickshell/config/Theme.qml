@@ -41,4 +41,9 @@ Singleton {
 
     readonly property int popupAnimMs: 180
     readonly property int popoutSpace: 600
+
+    readonly property color scrim: Qt.rgba(0, 0, 0, 0.45)
+    readonly property int launcherWidth: 640
+    readonly property int launcherRows: 10
+    readonly property int launcherRowHeight: 44
 }

@@ -8,10 +8,12 @@ hl.config({
         accel_profile = "flat",
         sensitivity = 0.0,
         float_switch_override_focus = 0,
+        numlock_by_default = true,
     },
     cursor = {
         no_hardware_cursors = 0,
         default_monitor = "DP-3",
+        hide_on_key_press = true,
     },
     general = {
         gaps_in = 0,
@@ -61,8 +63,17 @@ hl.config({
         middle_click_paste = false,
         mouse_move_enables_dpms = true,
         mouse_move_focuses_monitor = false,
+        key_press_enables_dpms = true,
+        disable_scale_notification = true,
+        allow_session_lock_restore = true,
     },
     xwayland = {
         force_zero_scaling = true,
+    },
+    binds = {
+        hide_special_on_workspace_change = true,
+    },
+    ecosystem = {
+        no_update_news = true,
     },
 })

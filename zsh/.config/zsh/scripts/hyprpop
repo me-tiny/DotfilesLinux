@@ -1,0 +1,29 @@
+#!/bin/zsh
+# Pop the active window out as a centered, pinned floating window; run again to
+# put it back in the tiling layout
+#
+# Usage: hyprpop [width height]
+
+width=${1:-1300}
+height=${2:-900}
+
+active=$(hyprctl activewindow -j)
+addr=$(print -r -- "$active" | jq -r '.address')
+pinned=$(print -r -- "$active" | jq -r '.pinned')
+[[ -z $addr || $addr == null ]] && exit 1
+
+w="address:$addr"
+d() { hyprctl dispatch "$1" >/dev/null; }
+
+if [[ $pinned == true ]]; then
+    d "hl.dsp.window.pin({ window = \"$w\" })"
+    d "hl.dsp.window.float({ window = \"$w\", action = \"toggle\" })"
+    d "hl.dsp.window.tag({ window = \"$w\", tag = \"-pop\" })"
+else
+    d "hl.dsp.window.float({ window = \"$w\", action = \"toggle\" })"
+    d "hl.dsp.window.resize({ window = \"$w\", x = $width, y = $height })"
+    d "hl.dsp.window.center({ window = \"$w\" })"
+    d "hl.dsp.window.pin({ window = \"$w\" })"
+    d "hl.dsp.window.alter_zorder({ window = \"$w\", mode = \"top\" })"
+    d "hl.dsp.window.tag({ window = \"$w\", tag = \"+pop\" })"
+fi

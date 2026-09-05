@@ -20,12 +20,6 @@ Rectangle {
     readonly property bool exiting: popup && Services.Notifications.exiting.includes(notif)
 
     readonly property bool critical: notif && notif.urgency === NotificationUrgency.Critical
-    readonly property var defaultAction: {
-        if (!notif) return null
-        for (const a of notif.actions)
-            if (a.identifier === "default") return a
-        return null
-    }
     readonly property var buttonActions: notif ? notif.actions.filter(a => a.identifier !== "default") : []
     readonly property real progressValue:
         notif && notif.hints && notif.hints.value !== undefined ? Number(notif.hints.value) : -1
@@ -101,11 +95,7 @@ Rectangle {
                 card.notif.dismiss()
                 return
             }
-            if (card.defaultAction)
-                card.defaultAction.invoke()
-            else
-                Services.Notifications.focusSender(card.notif)
-            card.notif.dismiss()
+            Services.Notifications.invokeDefault(card.notif)
             card.acted()
         }
     }

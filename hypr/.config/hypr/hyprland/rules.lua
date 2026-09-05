@@ -175,3 +175,33 @@ hl.window_rule({
     },
     tile = true,
 })
+
+hl.window_rule({
+    name = "pip-tag",
+    match = { title = "(Picture.?in.?[Pp]icture)" },
+    tag = "+pip",
+})
+
+hl.window_rule({
+    name = "pip-float-pin",
+    match = { tag = "pip" },
+    float = true,
+    pin = true,
+    size = { 600, 338 },
+    keep_aspect_ratio = true,
+    border_size = 0,
+    move = { "(monitor_w-window_w-40)", "(monitor_h-window_h-40)" },
+})
+
+hl.window_rule({
+    name = "portal-dialogs-float",
+    match = { class = "^(xdg-desktop-portal-gtk)$" },
+    float = true,
+    center = true,
+})
+
+hl.window_rule({
+    name = "1password-no-screenshare",
+    match = { class = "^(1[pP]assword)$" },
+    no_screen_share = true,
+})
